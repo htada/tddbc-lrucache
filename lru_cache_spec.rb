@@ -249,8 +249,8 @@ module TestMethods
   end
 end
 
-def create_lru_cache(size, limit=10)
-  targ = LruCache.new(size, limit)
+def create_lru_cache(size, lifespan = 10)
+  targ = LruCache.new(size, lifespan)
   targ.extend TestMethods
   return targ
 end
