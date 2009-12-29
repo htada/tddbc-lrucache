@@ -1,19 +1,25 @@
+require 'monitor'
+
 class LruCache
+  include MonitorMixin
   attr_reader :limit
 
   def initialize(size, lifespan = 10)
     raise ArgumentError.new unless valid_size?(size)
+	super()
     @limit = size
     @cache = []
     @lifespan = lifespan
   end
 
   def put(key, value)
-    remove_cache(key) if pick_out(key) != nil
-    @cache << CacheValue.new(key, value)
-    if @cache.size > @limit then
-      @cache.shift
-    end
+    synchronize do
+      remove_cache(key) if pick_out(key) != nil
+      @cache << CacheValue.new(key, value)
+      if @cache.size > @limit then
+        @cache.shift
+      end
+	end
   end
 
   def get(key)
@@ -26,15 +32,13 @@ class LruCache
   end
 
   def resize(size)
-    raise ArgumentError.new unless valid_size?(size)
-    (@limit - size).times do
-      @cache.shift
-    end
-    @limit = size
-  end
-
-  def valid_size?(size)
-    return size != nil && size > 0
+    synchronize do
+      raise ArgumentError.new unless valid_size?(size)
+      (@limit - size).times do
+        @cache.shift
+      end
+      @limit = size
+	end
   end
   
   def eldest_key
@@ -46,9 +50,13 @@ class LruCache
     ret = pick_out(key)
     return ret == nil ? nil : ret.birthtime
   end
-
+  
   private
-
+  def valid_size?(size)
+    return size != nil && size > 0
+  end
+  
+  private
   def pick_out(key)
     remove_dead_caches
     @cache.each do |v|
@@ -60,17 +68,20 @@ class LruCache
     return nil
   end
   
+  private
   def rotate(value)
     remove_cache(value.key)
     @cache << value
   end
 
+  private
   def remove_cache(key)
     @cache.each do |v|
       @cache.delete(v) if v.key == key
     end
   end
 
+  private
   def remove_dead_caches
     @cache.each do |v|
       lifetime = Time.now - v.birthtime
