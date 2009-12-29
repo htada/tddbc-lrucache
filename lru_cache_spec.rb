@@ -122,7 +122,7 @@ describe LruCache do
   describe "キャッシュの保持期間に関するテスト" do
     before :each do
       # 保存期間に10秒を設定する
-      @targ = create_lru_cache(4)
+      @targ = create_lru_cache(4, 10)
       @filled_time = now
       @targ.fill("a", "b", "c")
     end
@@ -249,8 +249,8 @@ module TestMethods
   end
 end
 
-def create_lru_cache(num)
-  targ = LruCache.new(num, 10)
+def create_lru_cache(size, limit=10)
+  targ = LruCache.new(size, limit)
   targ.extend TestMethods
   return targ
 end
