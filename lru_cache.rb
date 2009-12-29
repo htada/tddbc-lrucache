@@ -58,11 +58,13 @@ class LruCache
   
   private
   def pick_out(key)
-    remove_dead_caches
-    @cache.each do |v|
-      if v.key == key then
-        rotate(v)
-        return v
+    synchronize do
+      remove_dead_caches
+      @cache.each do |v|
+        if v.key == key then
+          rotate(v)
+          return v
+        end
       end
     end
     return nil

@@ -171,6 +171,18 @@ describe LruCache do
       @targ.get("c").should == "Y"
     end
     
+    it "主スレッド内でロック中に別スレッドでgetすると、主スレッドがロック解除後にeldest_keyに反映されること" do
+      t = nil
+      @targ.synchronize do
+        t = Thread.start do
+          @targ.get("a")
+        end
+        @targ.eldest_key.should == "a"
+      end
+      t.join
+      @targ.eldest_key.should == "b"
+    end
+    
     it "主スレッド内でロック中に別スレッドでputすると、主スレッドがロック解除後にputされること" do
       t = nil
       @targ.synchronize do
@@ -224,6 +236,14 @@ module TestMethods
     keys.each do |v|
       put(v, v)
     end
+  end
+
+  def lock
+    t = nil
+    synchronize do
+      yield
+    end
+    t.join
   end
 
   def should_have(*keys)
