@@ -155,67 +155,67 @@ describe LruCache do
       @targ = create_lru_cache(3)
       @targ.fill("a", "b")
     end
-	
+    
     it "順番にスレッドを実行すると、通常通り更新と追加ができること" do
-	  t1 = Thread.start do
-	    @targ.put("a", "X")
-	    @targ.get("a").should == "X"
-	  end
-	  t2 = Thread.start do
-	    @targ.put("c", "Y")
-	    @targ.get("c").should == "Y"
-	  end
-	  t1.join
-	  t2.join
+      t1 = Thread.start do
+        @targ.put("a", "X")
+        @targ.get("a").should == "X"
+      end
+      t2 = Thread.start do
+        @targ.put("c", "Y")
+        @targ.get("c").should == "Y"
+      end
+      t1.join
+      t2.join
       @targ.get("a").should == "X"
-	  @targ.get("c").should == "Y"
-	end
-	
-	it "主スレッド内でロック中に別スレッドでputすると、主スレッドがロック解除後にputされること" do
-	  t = nil
-	  @targ.synchronize do
-	    t = Thread.start do
-	      @targ.put("a", "X")
-	      @targ.put("c", "Y")
-	    end
-	    @targ.get("a").should == "a"
-	    @targ.get("c").should be_nil
-	  end
-	  t.join
+      @targ.get("c").should == "Y"
+    end
+    
+    it "主スレッド内でロック中に別スレッドでputすると、主スレッドがロック解除後にputされること" do
+      t = nil
+      @targ.synchronize do
+        t = Thread.start do
+          @targ.put("a", "X")
+          @targ.put("c", "Y")
+        end
+        @targ.get("a").should == "a"
+        @targ.get("c").should be_nil
+      end
+      t.join
       @targ.get("a").should == "X"
-	  @targ.get("c").should == "Y"
+      @targ.get("c").should == "Y"
       @targ.eldest_key.should == "b"
-	end
-	
-	it "主スレッド内でロック中に別スレッドでputしつつ主スレッドでもputすると、主スレッドのputが反映され、ロック解除後に別スレッドのputが反映されること" do
-	  t = nil
-	  @targ.synchronize do
-	    t = Thread.start do
-	      @targ.put("a", "X")
-	      @targ.put("c", "Y")
-	    end
-		@targ.put("a", "A")
-		@targ.put("c", "C")
-	    @targ.get("a").should == "A"
-	    @targ.get("c").should == "C"
-	  end
-	  t.join
+    end
+    
+    it "主スレッド内でロック中に別スレッドでputしつつ主スレッドでもputすると、主スレッドのputが反映され、ロック解除後に別スレッドのputが反映されること" do
+      t = nil
+      @targ.synchronize do
+        t = Thread.start do
+          @targ.put("a", "X")
+          @targ.put("c", "Y")
+        end
+        @targ.put("a", "A")
+        @targ.put("c", "C")
+        @targ.get("a").should == "A"
+        @targ.get("c").should == "C"
+      end
+      t.join
       @targ.get("a").should == "X"
-	  @targ.get("c").should == "Y"
+      @targ.get("c").should == "Y"
       @targ.eldest_key.should == "b"
-	end
-	
-	it "スレッド内でロック中に別スレッドでresizeすると、主スレッドがロック解除後にresizeが反映されること" do
-	  t = nil
-	  @targ.synchronize do
-	    t = Thread.start do
-		  @targ.resize(2)
-		end
-		@targ.limit.should == 3
-	  end
-	  t.join
-	  @targ.limit.should == 2
-	end
+    end
+    
+    it "スレッド内でロック中に別スレッドでresizeすると、主スレッドがロック解除後にresizeが反映されること" do
+      t = nil
+      @targ.synchronize do
+        t = Thread.start do
+          @targ.resize(2)
+        end
+        @targ.limit.should == 3
+      end
+      t.join
+      @targ.limit.should == 2
+    end
   end
 end
 

@@ -6,7 +6,7 @@ class LruCache
 
   def initialize(size, lifespan = 10)
     raise ArgumentError.new unless valid_size?(size)
-	super()
+    super()
     @limit = size
     @cache = []
     @lifespan = lifespan
@@ -19,7 +19,7 @@ class LruCache
       if @cache.size > @limit then
         @cache.shift
       end
-	end
+    end
   end
 
   def get(key)
@@ -38,7 +38,7 @@ class LruCache
         @cache.shift
       end
       @limit = size
-	end
+    end
   end
   
   def eldest_key
