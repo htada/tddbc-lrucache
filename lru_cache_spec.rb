@@ -171,61 +171,48 @@ describe LruCache do
       @targ.get("c").should == "Y"
     end
     
-    it "主スレッド内でロック中に別スレッドでgetすると、主スレッドがロック解除後にeldest_keyに反映されること" do
-      t = nil
-      @targ.synchronize do
-        t = Thread.start do
-          @targ.get("a")
-        end
+    it "主スレッド内でロック中に子スレッドでgetすると、主スレッドがロック解除後にeldest_keyに反映されること" do
+      @targ.synch_to proc {
+        @targ.get("a")
+      } do
         @targ.eldest_key.should == "a"
       end
-      t.join
       @targ.eldest_key.should == "b"
     end
     
-    it "主スレッド内でロック中に別スレッドでputすると、主スレッドがロック解除後にputされること" do
-      t = nil
-      @targ.synchronize do
-        t = Thread.start do
-          @targ.put("a", "X")
-          @targ.put("c", "Y")
-        end
+    it "主スレッド内でロック中に子スレッドでputすると、主スレッドがロック解除後にputされること" do
+      @targ.synch_to proc {
+        @targ.put("a", "X")
+        @targ.put("c", "Y")
+      } do
         @targ.get("a").should == "a"
         @targ.get("c").should be_nil
       end
-      t.join
       @targ.get("a").should == "X"
       @targ.get("c").should == "Y"
       @targ.eldest_key.should == "b"
     end
     
-    it "主スレッド内でロック中に別スレッドでputしつつ主スレッドでもputすると、主スレッドのputが反映され、ロック解除後に別スレッドのputが反映されること" do
-      t = nil
-      @targ.synchronize do
-        t = Thread.start do
-          @targ.put("a", "X")
-          @targ.put("c", "Y")
-        end
+    it "主スレッド内でロック中に子スレッドでputしつつ主スレッドでもputすると、先に主スレッドのputが反映され、ロック解除後に子スレッドのputが反映されること" do
+      @targ.synch_to proc {
+        @targ.put("a", "X")
+        @targ.put("c", "Y")
+      } do
         @targ.put("a", "A")
         @targ.put("c", "C")
         @targ.get("a").should == "A"
         @targ.get("c").should == "C"
       end
-      t.join
       @targ.get("a").should == "X"
       @targ.get("c").should == "Y"
-      @targ.eldest_key.should == "b"
     end
     
-    it "スレッド内でロック中に別スレッドでresizeすると、主スレッドがロック解除後にresizeが反映されること" do
-      t = nil
-      @targ.synchronize do
-        t = Thread.start do
-          @targ.resize(2)
-        end
+    it "スレッド内でロック中に子スレッドでresizeすると、主スレッドがロック解除後にresizeが反映されること" do
+      @targ.synch_to proc {
+        @targ.resize(2)
+      } do
         @targ.limit.should == 3
       end
-      t.join
       @targ.limit.should == 2
     end
   end
@@ -238,9 +225,12 @@ module TestMethods
     end
   end
 
-  def lock
+  def synch_to(co_thread)
     t = nil
     synchronize do
+      t = Thread.start do
+        co_thread.call
+      end
       yield
     end
     t.join
