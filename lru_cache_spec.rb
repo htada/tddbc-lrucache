@@ -171,22 +171,22 @@ describe LruCache do
       @targ.get("c").should == "Y"
     end
     
-	it "もし、スレッドを100個ぐらい実行しても、通常通り行進と追加ができる." do
-	  @targ.resize(100)
-	  t = []
-	  100.times do |i|
-	    t[i] = Thread.start do
-		  @targ.put(i.to_s, i.to_s)
-		end
-	  end
-	  100.times do |i|
-	    t[i].join
-	  end
-	  100.times do |i|
-		@targ.get(i.to_s).should == i.to_s
-	  end
-	end
-	
+    it "もし、スレッドを100個ぐらい実行しても、通常通り更新と追加ができる." do
+      @targ.resize(100)
+      t = []
+      100.times do |i|
+        t[i] = Thread.start do
+          @targ.put(i.to_s, i.to_s)
+        end
+      end
+      100.times do |i|
+        t[i].join
+      end
+      100.times do |i|
+        @targ.get(i.to_s).should == i.to_s
+      end
+    end
+
     it "もし、主スレッド内でロック中に子スレッドでgetすると、主スレッドがロック解除後に子スレッドの操作がeldest_keyに反映される." do
       @targ.synch_to proc {
         @targ.get("a")
