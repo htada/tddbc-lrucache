@@ -3,64 +3,64 @@
 require 'lru_cache'
 
 describe LruCache do
-  describe "初期化に関するテスト" do
-    it "サイズを渡したらそのサイズのキャッシュができること" do
+  describe "を初期化する場合" do
+    it "は、サイズを渡したら、そのサイズのキャッシュができる." do
       targ = LruCache.new(10)
       targ.limit.should == 10
     end
 
-    it "サイズにマイナス値を渡した場合、例外が発生すること" do
+    it "もし、サイズにマイナス値を渡したら、例外が発生する." do
       lambda{ LruCache.new(-1) }.should raise_error(ArgumentError)
     end
 
-    it "サイズにnilを渡した場合、例外が発生すること" do
+    it "もし、サイズにnilを渡したら、例外が発生する." do
       lambda{ LruCache.new(nil) }.should raise_error(ArgumentError)
     end
 
-    it "サイズに数値以外を渡した場合、例外が発生すること" do
+    it "もし、サイズに数値以外を渡したら、例外が発生する." do
       lambda{ LruCache.new("a") }.should raise_error(ArgumentError)
     end
   end
 
-  describe "値の出し入れに関するテスト" do
+  describe "に値を出し入れする場合" do
     before :each do
       @targ = create_lru_cache(3)
     end
     
-    it "入れたものが同じキーで取りだせること" do
+    it "は、キャッシュを入れると、入れたときと同じキーで取りだせる." do
       @targ.put("a", "A")
       @targ.get("a").should == "A"
       @targ.put("b", "B")
       @targ.get("b").should == "B"
     end
 
-    it "キャッシュの中にないキーを取り出すとnilが返ること" do
-      @targ.fill("a", "b", "c")
-      @targ.get("d").should be_nil
-    end
-
-    it "キャッシュがサイズを越えない場合、キャッシュの中で最も古いキーが取得できること" do
+    it "は、キャッシュした個数がサイズを越えなければ、キャッシュの中で最も古いキーが取得できる." do
       @targ.fill("a", "b", "c")
       @targ.eldest_key.should == "a"
     end
 
-    it "キャッシュが空の場合、最も古いキーとしてnilが返ること" do
-      @targ.eldest_key.should be_nil
-    end
-
-    it "キャッシュがサイズを越えた場合、越えた分の値が消えていること" do
+    it "は、キャッシュした個数がサイズを越えると、越えた分の値が消えている." do
       @targ.fill("a", "b", "c", "d")
       @targ.get("a").should be_nil
       @targ.eldest_key.should == "b"
     end
 
-    it "現在キャッシュされている値の個数が取得できること" do
+    it "は、つねに、現在キャッシュされている値の個数が取得できる." do
       @targ.size.should == 0
       @targ.fill("a", "b")
       @targ.size.should == 2
     end
+
+    it "もし、キャッシュの中にないキーを取り出すと、nilが返る." do
+      @targ.fill("a", "b", "c")
+      @targ.get("d").should be_nil
+    end
+
+    it "もし、キャッシュが空だったら、最も古いキーとしてnilが返る." do
+      @targ.eldest_key.should be_nil
+    end
     
-    it "同じキーを渡した場合、上書きされること" do
+    it "もし、同じキーで別のキャッシュを渡すと、同じキーのキャッシュが上書きされる." do
       @targ.fill("a", "b")
       @targ.size.should == 2
       @targ.put("a", "x")
@@ -68,7 +68,7 @@ describe LruCache do
       @targ.get("a").should == "x"
     end
 
-    it "最も古いキーをgetすると次に古いキーが最も古いキーとして取得できること" do
+    it "もし、一度最も古いキーをgetしたら、次には古いキーが最も古いキーとして取得できる." do
       @targ.fill("a", "b", "c")
       @targ.eldest_key.should == "a"
       @targ.get("a")
@@ -76,50 +76,50 @@ describe LruCache do
     end
   end
 
-  describe "キャッシュサイズ変更に関するテスト" do
+  describe "のキャッシュサイズを変更する場合" do
     before :each do
       @targ = create_lru_cache(3)
       @targ.fill("a", "b", "c")
     end
 
-    it "新しいキャッシュサイズにマイナス値を渡した場合、例外が発生すること" do
-      lambda{ @targ.resize(-1) }.should raise_error(ArgumentError)
-    end
-
-    it "新しいキャッシュサイズにnilを渡した場合、例外が発生すること" do
-      lambda{ @targ.resize(nil) }.should raise_error(ArgumentError)
-    end
-
-    it "新しいキャッシュサイズに数値以外を渡した場合、例外が発生すること" do
-      lambda{ @targ.resize("a") }.should raise_error(ArgumentError)
-    end
-
-    it "キャッシュサイズが変更できること" do
+    it "は、キャッシュサイズが変更できる." do
       @targ.limit.should == 3
       @targ.resize(100)
       @targ.limit.should == 100
     end
 
-    it "キャッシュサイズを増やした場合、キャッシュの内容が変わらないこと" do
+    it "は、キャッシュサイズを増やすと、キャッシュの内容が変わらない." do
       @targ.resize(4)
       @targ.size.should == 3
       @targ.should_have("a", "b", "c")
     end
 
-    it "キャッシュサイズを減らした場合、リミットを越えたキャッシュが消えること" do
+    it "は、キャッシュサイズを減らすと、リミットを越えたキャッシュが消える." do
       @targ.resize(2)
       @targ.size.should == 2
       @targ.should_not_have("a")
       @targ.should_have("b", "c")
     end
 
-    it "キャッシュが空の場合に、キャッシュサイズを変更してもエラーが起こらないこと" do
+    it "は、キャッシュが空ならば、キャッシュサイズを変更しても、例外は発生しない." do
       @targ = LruCache.new(3)
-      lambda{ @targ.resize(1); @targ.resize(1000); }.should_not raise_error
+      proc{ @targ.resize(1); @targ.resize(1000); }.should_not raise_error
     end
+    it "もし、新しいキャッシュサイズにマイナス値を渡すと、例外が発生する." do
+      proc{ @targ.resize(-1) }.should raise_error(ArgumentError)
+    end
+
+    it "もし、新しいキャッシュサイズにnilを渡すと、例外が発生する." do
+      proc{ @targ.resize(nil) }.should raise_error(ArgumentError)
+    end
+
+    it "もし、新しいキャッシュサイズに数値以外を渡すと、例外が発生する." do
+      proc{ @targ.resize("a") }.should raise_error(ArgumentError)
+    end
+
   end
   
-  describe "キャッシュの保持期間に関するテスト" do
+  describe "のキャッシュの保持期間を変更する場合" do
     before :each do
       # 保存期間に10秒を設定する
       @targ = create_lru_cache(4, 10)
@@ -127,19 +127,11 @@ describe LruCache do
       @targ.fill("a", "b", "c")
     end
 
-    it "キャッシュが登録された時間が取得できること" do
+    it "は、登録したキャッシュの登録時間が取得できる." do
       @targ.birthtime_of("a").should == @filled_time
     end
 
-    it "保持期間を過ぎたキャッシュが消えること" do
-      @targ.should_have("a")
-      set_forward(9)
-      @targ.should_have("a")
-      set_forward(1)
-      @targ.should_not_have("a")
-    end
-
-    it "保持期間を過ぎていないキャッシュが消えないこと" do
+    it "は、getした時、保持期間を過ぎていないキャッシュが消えてはいけない." do
       set_forward(9)
       @targ.put("d", "D")
       set_forward(1)
@@ -148,15 +140,23 @@ describe LruCache do
       set_forward(9)
       @targ.should_not_have("d")
     end
+
+    it "は、getした時、保持期間を過ぎたキャッシュがあれば消える." do
+      @targ.should_have("a")
+      set_forward(9)
+      @targ.should_have("a")
+      set_forward(1)
+      @targ.should_not_have("a")
+    end
   end
   
-  describe "スレッドセーフに関するテスト" do
+  describe "が複数スレッドでアグレッシブに実行される場合" do
     before :each do
       @targ = create_lru_cache(3)
       @targ.fill("a", "b")
     end
     
-    it "順番にスレッドを実行すると、通常通り更新と追加ができること" do
+    it "は、順番にスレッドを実行すると、通常通り更新と追加ができる." do
       t1 = Thread.start do
         @targ.put("a", "X")
         @targ.get("a").should == "X"
@@ -171,7 +171,23 @@ describe LruCache do
       @targ.get("c").should == "Y"
     end
     
-    it "主スレッド内でロック中に子スレッドでgetすると、主スレッドがロック解除後にeldest_keyに反映されること" do
+	it "もし、スレッドを100個ぐらい実行しても、通常通り行進と追加ができる." do
+	  @targ.resize(100)
+	  t = []
+	  100.times do |i|
+	    t[i] = Thread.start do
+		  @targ.put(i.to_s, i.to_s)
+		end
+	  end
+	  100.times do |i|
+	    t[i].join
+	  end
+	  100.times do |i|
+		@targ.get(i.to_s).should == i.to_s
+	  end
+	end
+	
+    it "もし、主スレッド内でロック中に子スレッドでgetすると、主スレッドがロック解除後に子スレッドの操作がeldest_keyに反映される." do
       @targ.synch_to proc {
         @targ.get("a")
       } do
@@ -180,7 +196,7 @@ describe LruCache do
       @targ.eldest_key.should == "b"
     end
     
-    it "主スレッド内でロック中に子スレッドでputすると、主スレッドがロック解除後にputされること" do
+    it "もし、主スレッド内でロック中に子スレッドでputすると、主スレッドがロック解除後に子スレッドのputが反映される." do
       @targ.synch_to proc {
         @targ.put("a", "X")
         @targ.put("c", "Y")
@@ -193,7 +209,7 @@ describe LruCache do
       @targ.eldest_key.should == "b"
     end
     
-    it "主スレッド内でロック中に子スレッドでputしつつ主スレッドでもputすると、先に主スレッドのputが反映され、ロック解除後に子スレッドのputが反映されること" do
+    it "もし、主スレッド内でロック中に子スレッドでputしつつ主スレッドでもputすると、先に主スレッドのputが反映され、ロック解除後に子スレッドのputが反映される." do
       @targ.synch_to proc {
         @targ.put("a", "X")
         @targ.put("c", "Y")
@@ -207,7 +223,7 @@ describe LruCache do
       @targ.get("c").should == "Y"
     end
     
-    it "スレッド内でロック中に子スレッドでresizeすると、主スレッドがロック解除後にresizeが反映されること" do
+    it "もし、スレッド内でロック中に子スレッドでresizeすると、主スレッドがロック解除後に子スレッドのresizeが反映される." do
       @targ.synch_to proc {
         @targ.resize(2)
       } do
